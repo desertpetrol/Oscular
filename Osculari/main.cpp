@@ -5,6 +5,7 @@
 #include <cassert>
 #include <bitset>
 
+
 uint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255)
 {
 	return (a << 24) + (b << 16) + (g << 8) + r;
@@ -19,23 +20,57 @@ void unpack_color(const uint32_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uin
 	a = (color >> 24) & 255;
 }
 
+void drop_ppm_image(const std::string filename, const std::vector<uint32_t>& imageBuffer, const size_t w, const size_t h)
+{
+	const size_t imageB_size = w * h;
+	assert(imageBuffer.size() == imageB_size);
+
+	std::ofstream ofs(filename, std::ios::binary);
+
+	//Adding the necessary header for the ppm image: "Magic number" + width, height and maximum rgba value.
+	ofs << "P6\n" << w << " " << h << "'\n255'\n";
+	for (size_t i = 0; i < imageB_size; i++) {
+		uint8_t r, g, b, a;
+		unpack_color(imageBuffer[i], r, g, b, a);
+		ofs << static_cast<char>(r) << static_cast<char>(g) << static_cast<char>(b);
+	}
+
+	ofs.close();
+}
+
+
 int main()
 {
-	const uint8_t r = 32;
-	const uint8_t g = 32;
-	const uint8_t b = 128;
-	const uint8_t a = 255;
+	const size_t img_h = 512;
+	const size_t img_w = 512;
+	const size_t img_s = img_w * img_h;
 
-	uint8_t uR, uG, uB, uA;
+	std::vector<uint32_t> frameBuffer(img_s, 255);
 
-	uint32_t test = pack_color(r, g, b);
-	std::cout << test << '\n';
+	int fA = 0, fB=1, fC=0;
 
-	unpack_color(test, uR, uG, uB, uA);
-	std::cout << std::bitset<8>(uR) << '\t';
-	std::cout << std::bitset<8>(uG) << '\t';
-	std::cout << std::bitset<8>(uB) << '\t';
-	std::cout << std::bitset<8>(uA) << '\n';
+	for (int j = 0; j < img_h; j++) {
+		for (int i = 0; i < img_w; i++) {
+			fC = fA + fB;
+			uint8_t r, g, b;
+			r = 255 * fC/float(2178309);
+			g = 255 * fC/float(2178309);
+			b = 255 * fC/float(2178309);
+
+			frameBuffer[i+j*img_w] = pack_color(r, g, b);
+
+			fA = fB;
+			fB = fC;
+			if (fC >= 2178309) {
+				fC = 0;
+				fA = 1;
+				fB = 1;
+			}
+				
+		}
+	}
+	
+	drop_ppm_image("./out.ppm", frameBuffer, img_w, img_h);
 
 	return 0;
 }
