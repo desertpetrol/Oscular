@@ -5,6 +5,25 @@
 #include <cassert>
 #include <bitset>
 
+void draw_rectangle(std::vector<uint32_t> &img, 
+	const size_t img_w, const size_t img_h,
+	const size_t sqr_x, const size_t sqr_y,
+	const size_t sqr_w, const size_t sqr_h, 
+	const uint32_t color) 
+{
+	assert(img.size() == img_w * img_h);
+	size_t cx = 0;
+	size_t cy = 0;
+	for (size_t i = 0; i < sqr_w; i++) {
+		for (size_t j = 0; j < sqr_h; j++) {
+			cx = sqr_x + i;
+			cy = sqr_y + j;
+			assert(cx < img_w && cy < img_h);
+			img[cx + cy * img_w] = color;
+		}
+	}
+}
+
 
 uint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255)
 {
@@ -41,6 +60,7 @@ void drop_ppm_image(const std::string filename, const std::vector<uint32_t>& ima
 
 int main()
 {
+	uint32_t red = pack_color(255, 0, 0);
 	const size_t img_h = 512;
 	const size_t img_w = 512;
 	const size_t img_s = img_w * img_h;
@@ -66,10 +86,11 @@ int main()
 				fA = 1;
 				fB = 1;
 			}
-				
 		}
 	}
 	
+	draw_rectangle(frameBuffer, img_w, img_h, 255-16, 225-16, 32, 32, red);
+
 	drop_ppm_image("./out.ppm", frameBuffer, img_w, img_h);
 
 	return 0;
