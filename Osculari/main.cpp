@@ -92,8 +92,6 @@ int main()
 
 	assert(sizeof(map) == map_w * map_h + 1); // +1 for the null terminated string ( '\0' )
 
-	float player_posx = 3.14;
-	float player_posy = 2.34;
 
 	for (int j = 0; j < img_h; j++) {
 		for (int i = 0; i < img_w; i++) {
@@ -121,6 +119,24 @@ int main()
 			draw_rectangle(frameBuffer, img_w, img_h, rect_x, rect_y, rect_w, rect_h, red);
 		}
 	}	
+
+
+	float player_posx = 3.14;
+	float player_posy = 2.34;
+	float player_va = 1.5;
+
+	//raycasting
+	float c = 0;
+
+	for (float t = 0; t < 20; t += .05) {
+		float cx = player_posx + t * cos(player_va);
+		float cy = player_posy + t * sin(player_va);
+		if (map[int(cx) + int(cy) * map_w] != ' ') break;
+
+		size_t pix_x = cx * rect_w;
+		size_t pix_y = cy * rect_h;
+		frameBuffer[pix_x + pix_y * img_w] = green;
+	}
 
 	draw_rectangle(frameBuffer, img_w, img_h, player_posx * rect_w, player_posy * rect_h, 5, 5, blue);
 
