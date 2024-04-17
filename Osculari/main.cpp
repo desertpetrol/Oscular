@@ -7,17 +7,17 @@
 
 void draw_rectangle(std::vector<uint32_t> &img, 
 	const size_t img_w, const size_t img_h,
-	const size_t sqr_x, const size_t sqr_y,
-	const size_t sqr_w, const size_t sqr_h, 
+	const size_t rect_x, const size_t rect_y,
+	const size_t rect_w, const size_t rect_h, 
 	const uint32_t color) 
 {
 	assert(img.size() == img_w * img_h);
 	size_t cx = 0;
 	size_t cy = 0;
-	for (size_t i = 0; i < sqr_w; i++) {
-		for (size_t j = 0; j < sqr_h; j++) {
-			cx = sqr_x + i;
-			cy = sqr_y + j;
+	for (size_t i = 0; i < rect_w; i++) {
+		for (size_t j = 0; j < rect_h; j++) {
+			cx = rect_x + i;
+			cy = rect_y + j;
 			assert(cx < img_w && cy < img_h);
 			img[cx + cy * img_w] = color;
 		}
@@ -60,36 +60,69 @@ void drop_ppm_image(const std::string filename, const std::vector<uint32_t>& ima
 
 int main()
 {
-	uint32_t red = pack_color(255, 0, 0);
+	uint32_t red   = pack_color(255, 0, 0);
+	uint32_t green = pack_color(0, 255, 0);
+	uint32_t blue  = pack_color(0, 0, 255);
+	uint32_t black = pack_color(0, 0, 0);
+	uint32_t white = pack_color(255, 255, 255);
+
 	const size_t img_h = 512;
 	const size_t img_w = 512;
 	const size_t img_s = img_w * img_h;
-
 	std::vector<uint32_t> frameBuffer(img_s, 255);
 
-	int fA = 0, fB=1, fC=0;
+	const size_t map_w = 16;
+	const size_t map_h = 16;
+	const char map[] =	"0000222222220000"\
+				"1              0"\
+				"1      11111   0"\
+				"1     0        0"\
+				"0     0  1110000"\
+				"0     3        0"\
+				"0   10000      0"\
+				"0   0   11100  0"\
+				"0   0   0      0"\
+				"0   0   1  00000"\
+				"0       1      0"\
+				"2       1      0"\
+				"0       0      0"\
+				"0 0000000      0"\
+				"0              0"\
+				"0002222222200000";
+
+	assert(sizeof(map) == map_w * map_h + 1); // +1 for the null terminated string ( '\0' )
+
+	float player_posx = 3.14;
+	float player_posy = 2.34;
 
 	for (int j = 0; j < img_h; j++) {
 		for (int i = 0; i < img_w; i++) {
-			fC = fA + fB;
 			uint8_t r, g, b;
-			r = 255 * fC/float(2178309);
-			g = 255 * fC/float(2178309);
-			b = 255 * fC/float(2178309);
-
+			r = 32;
+			g = 32;
+			b = 32;
 			frameBuffer[i+j*img_w] = pack_color(r, g, b);
-
-			fA = fB;
-			fB = fC;
-			if (fC >= 2178309) {
-				fC = 0;
-				fA = 1;
-				fB = 1;
-			}
 		}
 	}
-	
-	draw_rectangle(frameBuffer, img_w, img_h, 255-16, 225-16, 32, 32, red);
+
+
+
+	//Drawing map inside image
+	const size_t rect_w = img_w / map_w;
+	const size_t rect_h = img_h / map_h;
+
+	for (size_t j = 0;  j < map_h; j++) {
+		for (size_t i = 0; i < map_w; i++)
+		{
+			if (map[i + j * map_w] == ' ') continue;
+			size_t rect_x = i * rect_w;
+			size_t rect_y = j * rect_h;
+
+			draw_rectangle(frameBuffer, img_w, img_h, rect_x, rect_y, rect_w, rect_h, red);
+		}
+	}	
+
+	draw_rectangle(frameBuffer, img_w, img_h, player_posx * rect_w, player_posy * rect_h, 5, 5, blue);
 
 	drop_ppm_image("./out.ppm", frameBuffer, img_w, img_h);
 
