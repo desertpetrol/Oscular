@@ -20,8 +20,9 @@ void draw_rectangle(std::vector<uint32_t>& img,
 		for (size_t j = 0; j < rect_h; j++) {
 			cx = rect_x + i;
 			cy = rect_y + j;
-			assert(cx < img_w && cy < img_h);
-			img[cx + cy * img_w] = color;
+			if (cx>=img_w || cy>=img_h) continue;
+			img[cx + cy * img_w] = color; 
+			
 		}
 	}
 }
@@ -67,11 +68,13 @@ int main()
 	uint32_t black = pack_color(0, 0, 0);
 	uint32_t white = pack_color(255, 255, 255);
 
+
+	const size_t img_w = 1024;
 	const size_t img_h = 512;
-	const size_t img_w = 512;
 	const size_t img_s = img_w * img_h;
 
-	std::vector<uint32_t> frameBuffer(img_s, 255);
+	std::vector<uint32_t> frameBuffer(img_s, white);
+
 
 	const size_t map_w = 16;
 	const size_t map_h = 16;
@@ -106,9 +109,8 @@ int main()
 	}
 
 
-
 	//Drawing map inside image
-	const size_t rect_w = img_w / map_w;
+	const size_t rect_w = img_w / (map_w*2);
 	const size_t rect_h = img_h / map_h;
 
 	for (size_t j = 0; j < map_h; j++) {
@@ -123,28 +125,33 @@ int main()
 	}
 
 
+	//raycasting
 	float player_posx = 3.14;
 	float player_posy = 2.34;
-	float player_va = 1.523;
+	float player_va = 1.4;
 	const float fov = M_PI / 3;
 
-	//raycasting
 	float c = 0;
 
-	for (size_t i = 0; i < img_w; i++) {
-		float angle = player_va - fov / 2 + fov * i / float(img_w);
+	for (size_t i = 0; i < img_w/2; i++) {
+		float angle = player_va - fov / 2 + fov * i / float(img_w/2);
 
 		for (float t = 0; t < 20; t += .05) {
 			float cx = player_posx + t * cos(angle);
 			float cy = player_posy + t * sin(angle);
-			if (map[int(cx) + int(cy) * map_w] != ' ') break;
 
 			size_t pix_x = cx * rect_w;
 			size_t pix_y = cy * rect_h;
 			frameBuffer[pix_x + pix_y * img_w] = green;
-		}
 
+			if (map[int(cx) + int(cy) * map_w] != ' ') {
+				size_t column_height = img_h/t;
+				draw_rectangle(frameBuffer, img_w, img_h, img_w/2+i, img_h/2-column_height/2, 1, column_height, blue);
+				break;
+			}
+		}
 	}
+
 
 	draw_rectangle(frameBuffer, img_w, img_h, player_posx * rect_w, player_posy * rect_h, 5, 5, blue);
 
