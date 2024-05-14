@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -5,11 +7,11 @@
 #include <cassert>
 
 
-void draw_rectangle(std::vector<uint32_t> &img, 
+void draw_rectangle(std::vector<uint32_t>& img,
 	const size_t img_w, const size_t img_h,
 	const size_t rect_x, const size_t rect_y,
-	const size_t rect_w, const size_t rect_h, 
-	const uint32_t color) 
+	const size_t rect_w, const size_t rect_h,
+	const uint32_t color)
 {
 	assert(img.size() == img_w * img_h);
 	size_t cx = 0;
@@ -30,7 +32,7 @@ uint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uin
 	return (a << 24) + (b << 16) + (g << 8) + r;
 }
 
-void unpack_color(const uint32_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a)
+void unpack_color(const uint32_t& color, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a)
 {
 	//apply a mask so we only get a Byte from the bit-shifted value
 	r = (color >>  0) & 255;
@@ -59,9 +61,9 @@ void drop_ppm_image(const std::string filename, const std::vector<uint32_t>& ima
 
 int main()
 {
-	uint32_t red   = pack_color(255, 0, 0);
+	uint32_t red = pack_color(255, 0, 0);
 	uint32_t green = pack_color(0, 255, 0);
-	uint32_t blue  = pack_color(0, 0, 255);
+	uint32_t blue = pack_color(0, 0, 255);
 	uint32_t black = pack_color(0, 0, 0);
 	uint32_t white = pack_color(255, 255, 255);
 
@@ -109,7 +111,7 @@ int main()
 	const size_t rect_w = img_w / map_w;
 	const size_t rect_h = img_h / map_h;
 
-	for (size_t j = 0;  j < map_h; j++) {
+	for (size_t j = 0; j < map_h; j++) {
 		for (size_t i = 0; i < map_w; i++)
 		{
 			if (map[i + j * map_w] == ' ') continue;
@@ -118,24 +120,30 @@ int main()
 
 			draw_rectangle(frameBuffer, img_w, img_h, rect_x, rect_y, rect_w, rect_h, red);
 		}
-	}	
+	}
 
 
 	float player_posx = 3.14;
 	float player_posy = 2.34;
-	float player_va = 1.5;
+	float player_va = 1.523;
+	const float fov = M_PI / 3;
 
 	//raycasting
 	float c = 0;
 
-	for (float t = 0; t < 20; t += .05) {
-		float cx = player_posx + t * cos(player_va);
-		float cy = player_posy + t * sin(player_va);
-		if (map[int(cx) + int(cy) * map_w] != ' ') break;
+	for (size_t i = 0; i < img_w; i++) {
+		float angle = player_va - fov / 2 + fov * i / float(img_w);
 
-		size_t pix_x = cx * rect_w;
-		size_t pix_y = cy * rect_h;
-		frameBuffer[pix_x + pix_y * img_w] = green;
+		for (float t = 0; t < 20; t += .05) {
+			float cx = player_posx + t * cos(angle);
+			float cy = player_posy + t * sin(angle);
+			if (map[int(cx) + int(cy) * map_w] != ' ') break;
+
+			size_t pix_x = cx * rect_w;
+			size_t pix_y = cy * rect_h;
+			frameBuffer[pix_x + pix_y * img_w] = green;
+		}
+
 	}
 
 	draw_rectangle(frameBuffer, img_w, img_h, player_posx * rect_w, player_posy * rect_h, 5, 5, blue);
