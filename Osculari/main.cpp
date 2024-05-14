@@ -3,7 +3,7 @@
 #include <vector>
 #include <cstdint>
 #include <cassert>
-#include <bitset>
+
 
 void draw_rectangle(std::vector<uint32_t> &img, 
 	const size_t img_w, const size_t img_h,
@@ -53,7 +53,6 @@ void drop_ppm_image(const std::string filename, const std::vector<uint32_t>& ima
 		unpack_color(imageBuffer[i], r, g, b, a);
 		ofs << static_cast<char>(r) << static_cast<char>(g) << static_cast<char>(b);
 	}
-
 	ofs.close();
 }
 
@@ -69,6 +68,7 @@ int main()
 	const size_t img_h = 512;
 	const size_t img_w = 512;
 	const size_t img_s = img_w * img_h;
+
 	std::vector<uint32_t> frameBuffer(img_s, 255);
 
 	const size_t map_w = 16;
